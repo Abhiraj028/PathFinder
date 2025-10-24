@@ -12,14 +12,6 @@ This project visualizes various pathfinding algorithms (Dijkstra, A*, BFS, GBFS,
 * User controls for selecting algorithms, resetting the visualization, and adjusting animation speed.
 * Map boundaries restricted to the relevant Kolkata/Howrah area.
 
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-* **Node.js** (includes npm): [Download Node.js](https://nodejs.org/) (LTS version recommended)
-* **Python 3**: [Download Python](https://www.python.org/downloads/)
-* **pip** (Python package installer, usually included with Python)
-
 ## Setup Instructions
 
 Follow these steps to set up the project locally:
@@ -29,7 +21,6 @@ Follow these steps to set up the project locally:
     git clone <your-repository-url>
     cd PathFinder 
     ```
-    *(Replace `<your-repository-url>` with the actual URL of your Git repository)*
 
 2.  **Install Node.js Dependencies:**
     This installs Vite, TypeScript, Leaflet, and other necessary frontend packages.
@@ -37,23 +28,12 @@ Follow these steps to set up the project locally:
     npm install
     ```
 
-3.  **Set Up Python Environment (Recommended):**
-    It's best practice to use a virtual environment to manage Python dependencies.
+3.  **Set Up Python Environment:**
     ```bash
-    # Create a virtual environment named 'venv'
     python3 -m venv venv
 
-    # Activate the virtual environment
-    # On Linux/macOS:
     source venv/bin/activate
-    # On Windows (Git Bash or WSL):
-    # source venv/Scripts/activate 
-    # On Windows (Command Prompt):
-    # venv\Scripts\activate.bat 
-    # On Windows (PowerShell):
-    # venv\Scripts\Activate.ps1 
     ```
-    *(Your terminal prompt should now indicate you are in the `(venv)`)*
 
 4.  **Install Python Dependencies:**
     This installs `osmnx` and `networkx`, which are needed for processing the map data.
@@ -66,11 +46,10 @@ Follow these steps to set up the project locally:
     ```bash
     python process_map.py
     ```
-    *(This step requires an internet connection and may take several minutes depending on network speed and system resources.)*
 
 ## Running the Application
 
-Once the setup is complete, you can start the development server:
+Once the setup is complete, you can start:
 
 ```bash
 npm run dev
