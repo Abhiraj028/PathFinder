@@ -85,3 +85,46 @@ body,
   font-size: 12px;
   padding: 4px 8px;
 }
+
+#leaderboard-panel {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 15px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  z-index: 800;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  max-width: 300px; 
+  max-height: 250px; 
+  overflow-y: auto; 
+}
+
+#leaderboard-panel h4 {
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+#leaderboard-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+#leaderboard-panel th, #leaderboard-panel td {
+  border: 1px solid #ddd;
+  padding: 4px 6px;
+  text-align: right;
+}
+
+#leaderboard-panel th {
+  background-color: #f2f2f2;
+  text-align: center;
+}
+
+#leaderboard-panel td:first-child {
+  text-align: left;
+  font-weight: bold;
+}
