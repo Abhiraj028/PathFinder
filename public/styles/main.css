@@ -1,0 +1,87 @@
+html,
+body,
+#map {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #333;
+}
+
+.controls {
+  position: fixed;
+  top: 10px;
+  left: 50px;
+  background: white;
+  padding: 8px 12px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  z-index: 800;
+  font-family: Arial, sans-serif;
+}
+
+.controls label {
+  margin-right: 5px;
+}
+
+#stats-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 15px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  z-index: 800;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  max-width: 250px;
+}
+
+#stats-panel h4 {
+  margin: 0 0 5px 0;
+}
+
+#stats-panel p {
+  margin: 4px 0;
+}
+
+.controls {
+  position: fixed;
+  top: 10px;
+  left: 50px;
+  background: white;
+  padding: 8px 12px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  z-index: 800;
+  font-family: Arial, sans-serif;
+  display: flex; 
+  align-items: center;
+}
+
+.controls label {
+  margin-right: 5px;
+}
+
+.controls button {
+  margin-left: 10px;
+}
+
+.speed-controls {
+  position: fixed;
+  top: 65px; 
+  left: 50px;
+  background: white;
+  padding: 5px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  z-index: 800;
+  display: flex;
+}
+
+.speed-controls button {
+  margin: 3px;
+  font-size: 12px;
+  padding: 4px 8px;
+}
