@@ -1,7 +1,7 @@
-// Import Leaflet CSS for map styling
+// Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
 
-// Import core data structures and algorithms
+// Import core components
 import { Graph } from '../core/data_structures/Graph';
 import { AlgorithmResult, dijkstra } from '../core/algorithms/dijkstra';
 import { aStar } from '../core/algorithms/aStar';
@@ -9,7 +9,7 @@ import { breadthFirstSearch } from '../core/algorithms/bfs';
 import { greedyBestFirstSearch } from '../core/algorithms/gbfs';
 import { depthFirstSearch } from '../core/algorithms/dfs';
 
-// Import types and utility classes
+// Import types and utilities
 import { GraphJSON, GraphNode } from '../types';
 import { MapManager } from './MapManager';
 import { Visualizer } from './Visualizer';
@@ -22,207 +22,210 @@ class App {
   // UI Element References
   private algoSelector: HTMLSelectElement;
   private statsPanel: HTMLElement;
+  private leaderboardContent: HTMLElement;
   private resetButton: HTMLButtonElement;
   private speedSlow: HTMLButtonElement;
   private speedNormal: HTMLButtonElement;
   private speedFast: HTMLButtonElement;
 
-  // Application State
+  // State
   private startNode: GraphNode | null = null;
   private endNode: GraphNode | null = null;
-  private currentSpeed: number = 5; // Default animation speed
+  private currentSpeed: number = 0; // Default speed set to Fast (0ms)
 
-  // Cache for algorithm results and performance times
+  // Caching
   private lastResults: Map<string, AlgorithmResult> = new Map();
   private lastTimes: Map<string, number> = new Map();
+
+  // Leaderboard config
+  private algoOrder: string[] = ['astar', 'gbfs', 'dijkstra', 'bfs', 'dfs'];
+  private algoNames: { [key: string]: string } = {
+    astar: 'A*', gbfs: 'Greedy BFS', dijkstra: 'Dijkstra', bfs: 'BFS', dfs: 'DFS',
+  };
 
   constructor() {
     this.graph = new Graph();
     this.mapManager = new MapManager(this.graph);
     this.visualizer = new Visualizer(this.mapManager.map, this.graph);
 
-    // Get references to DOM elements
+    // Get DOM elements
     this.algoSelector = document.getElementById('algo-select') as HTMLSelectElement;
     this.statsPanel = document.getElementById('stats-panel') as HTMLElement;
+    this.leaderboardContent = document.getElementById('leaderboard-content') as HTMLElement;
     this.resetButton = document.getElementById('reset-button') as HTMLButtonElement;
     this.speedSlow = document.getElementById('speed-slow') as HTMLButtonElement;
     this.speedNormal = document.getElementById('speed-normal') as HTMLButtonElement;
     this.speedFast = document.getElementById('speed-fast') as HTMLButtonElement;
   }
 
-  // Initializes the application: loads data and sets up listeners
+  // Initializes the application
   public async start() {
     console.log('Fetching map data...');
-    const loadingMessage = this.showLoadingMessage(
-      'Loading Kolkata graph (this may take a minute)...'
-    );
+    const loadingMessage = this.showLoadingMessage('Loading Kolkata graph...');
 
     try {
-      // Fetch graph data from the JSON file
       const response = await fetch('/kolkata_graph.json');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch graph: ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error(`Fetch failed: ${response.statusText}`);
       const data: GraphJSON = await response.json();
 
       loadingMessage.textContent = 'Building graph...';
-      // Construct the graph object from the loaded JSON data
       this.graph.buildFromJSON(data);
 
-      console.log('Graph is built. App is ready.');
-      this.hideLoadingMessage(loadingMessage); // Remove loading overlay
+      console.log('Graph built. App ready.');
+      this.hideLoadingMessage(loadingMessage);
 
-      // Set up event listeners for user interactions
+      // Setup event listeners
       this.mapManager.onMapClick(this.handleMapClick.bind(this));
-      this.algoSelector.addEventListener(
-        'change',
-        () => this.runVisualization(false) // Re-run visualization without recalculating paths
-      );
+      this.algoSelector.addEventListener('change', () => this.runVisualization(false)); // Don't recalculate on change
       this.resetButton.addEventListener('click', this.handleReset.bind(this));
 
-      // Speed control listeners: update speed and restart visualization
+      // --- CORRECTED SPEED LISTENERS ---
+      // These should call runVisualization to restart the animation with the new speed.
       this.speedSlow.addEventListener('click', () => {
         this.currentSpeed = 50; // Slow speed
-        this.runVisualization(false);
+        this.runVisualization(false); // Restart animation with new speed
       });
       this.speedNormal.addEventListener('click', () => {
         this.currentSpeed = 5; // Normal speed
-        this.runVisualization(false);
+        this.runVisualization(false); // Restart animation with new speed
       });
       this.speedFast.addEventListener('click', () => {
         this.currentSpeed = 0; // Fast speed
-        this.runVisualization(false);
+        this.runVisualization(false); // Restart animation with new speed
       });
+      // ------------------------------------
 
     } catch (err) {
-      console.error('Error during app initialization:', err);
-      loadingMessage.textContent = 'Error loading map data. Please refresh.';
+      console.error('Initialization error:', err);
+      loadingMessage.textContent = 'Error loading data. Refresh needed.';
     }
   }
 
-  // Resets the application state completely
+  // --- Rest of the file (handleReset, handleMapClick, runVisualization, etc.) is unchanged ---
+  // Resets the application state
   private handleReset() {
-    console.log('Resetting application state.');
+    console.log('Resetting state.');
     this.visualizer.clearLayers();
     this.mapManager.clearMarkers();
     this.startNode = null;
     this.endNode = null;
-    this.lastResults.clear(); // Clear cached algorithm results
-    this.lastTimes.clear();   // Clear cached algorithm times
-    this.updateStatsPanel('Click on the map to set a start point.'); // Reset stats display
+    this.lastResults.clear();
+    this.lastTimes.clear();
+    this.updateStatsPanel('Click map for start point.');
+    this.updateLeaderboardPanel(true); // Clear leaderboard display
   }
 
-  // Handles clicks on the map to set start/end points or trigger a reset
+  // Handles map clicks
   private handleMapClick(node: GraphNode) {
-    this.visualizer.clearLayers(); // Clear any existing animation layers
+    this.visualizer.clearLayers();
 
     if (!this.startNode) {
-      // First click sets the start node
       this.startNode = node;
       this.mapManager.clearMarkers();
       this.mapManager.setMarker(node, 'start');
-      this.updateStatsPanel('Click on the map to set an end point.');
+      this.updateStatsPanel('Click map for end point.');
+      this.updateLeaderboardPanel(true); // Clear leaderboard
+
     } else if (!this.endNode) {
-      // Second click sets the end node and runs the algorithms
       this.endNode = node;
       this.mapManager.setMarker(node, 'end');
-      this.runVisualization(true); // Recalculate paths for the new points
+      this.runVisualization(true); // Recalculate ONLY the selected algo
+
     } else {
-      // Third click resets the state and sets a new start node
+      // Third click resets
       this.handleReset();
       this.startNode = node;
       this.mapManager.setMarker(node, 'start');
-      this.updateStatsPanel('Click on the map to set an end point.');
+      this.updateStatsPanel('Click map for end point.');
     }
   }
 
-  // Executes algorithms (if needed) and starts the visualization for the selected one
+  /**
+   * Runs the selected algorithm (if needed) and starts visualization.
+   * Updates leaderboard with currently available data.
+   */
   private runVisualization(recalculate: boolean = false) {
-    // Ensure both start and end nodes are defined
-    if (!this.startNode || !this.endNode) {
-      return;
-    }
+    if (!this.startNode || !this.endNode) return;
 
-    this.visualizer.clearLayers(); // Clear previous animation paths
+    this.visualizer.clearLayers();
 
-    // Clear cached results if new points were selected
+    // Clear caches only if new points were clicked
     if (recalculate) {
       this.lastResults.clear();
       this.lastTimes.clear();
     }
 
-    const selectedAlgo = this.algoSelector.value; // Get the currently selected algorithm
-    const speed = this.currentSpeed; // Use the currently set animation speed
+    const selectedAlgo = this.algoSelector.value;
+    const speed = this.currentSpeed; // Use the currently set speed
+    let result: AlgorithmResult | undefined = this.lastResults.get(selectedAlgo);
+    let time: number | undefined = this.lastTimes.get(selectedAlgo);
 
-    // Run all algorithms if the cache is empty
-    if (this.lastResults.size === 0) {
-      console.log('Calculating all algorithm paths...');
-      let startTime; // Variable to store start time for performance measurement
+    // Only run the algorithm if its results aren't cached
+    if (result === undefined || time === undefined) {
+      console.log(`Calculating path for ${selectedAlgo}...`);
+      let startTime = performance.now();
+      let calculatedResult: AlgorithmResult | null = null;
 
-      // Execute Dijkstra and store result/time
-      startTime = performance.now();
-      this.lastResults.set('dijkstra', dijkstra(this.graph, this.startNode.id, this.endNode.id));
-      this.lastTimes.set('dijkstra', performance.now() - startTime);
+      // Select and run the specific algorithm
+      switch (selectedAlgo) {
+        case 'dijkstra':
+          calculatedResult = dijkstra(this.graph, this.startNode.id, this.endNode.id);
+          break;
+        case 'astar':
+          calculatedResult = aStar(this.graph, this.startNode.id, this.endNode.id);
+          break;
+        case 'gbfs':
+          calculatedResult = greedyBestFirstSearch(this.graph, this.startNode.id, this.endNode.id);
+          break;
+        case 'bfs':
+          calculatedResult = breadthFirstSearch(this.graph, this.startNode.id, this.endNode.id);
+          break;
+        case 'dfs':
+          calculatedResult = depthFirstSearch(this.graph, this.startNode.id, this.endNode.id);
+          break;
+        default:
+          console.error(`Unknown algorithm selected: ${selectedAlgo}`);
+          return;
+      }
 
-      // Execute A* and store result/time
-      startTime = performance.now();
-      this.lastResults.set('astar', aStar(this.graph, this.startNode.id, this.endNode.id));
-      this.lastTimes.set('astar', performance.now() - startTime);
+      time = performance.now() - startTime;
+      result = calculatedResult!; // Assume calculation was successful
 
-      // Execute Greedy Best-First Search and store result/time
-      startTime = performance.now();
-      this.lastResults.set('gbfs', greedyBestFirstSearch(this.graph, this.startNode.id, this.endNode.id));
-      this.lastTimes.set('gbfs', performance.now() - startTime);
+      // Cache the new result
+      this.lastResults.set(selectedAlgo, result);
+      this.lastTimes.set(selectedAlgo, time);
 
-      // Execute Breadth-First Search and store result/time
-      startTime = performance.now();
-      this.lastResults.set('bfs', breadthFirstSearch(this.graph, this.startNode.id, this.endNode.id));
-      this.lastTimes.set('bfs', performance.now() - startTime);
-
-      // Execute Depth-First Search and store result/time
-      startTime = performance.now();
-      this.lastResults.set('dfs', depthFirstSearch(this.graph, this.startNode.id, this.endNode.id));
-      this.lastTimes.set('dfs', performance.now() - startTime);
+      // Update the leaderboard now that new data is available
+      this.updateLeaderboardPanel();
     }
 
-    // Retrieve the cached result and time for the selected algorithm
-    const result = this.lastResults.get(selectedAlgo)!;
-    const time = this.lastTimes.get(selectedAlgo)!;
-
-    // Start the animation process
-    console.log(`Animating ${selectedAlgo}...`);
-    this.visualizer.animate(result, speed);
-
-    // Update the statistics display panel
-    this.updateStatsPanel(
-      `<strong>${this.algoSelector.options[this.algoSelector.selectedIndex].text}</strong>`, // Use the display name from the dropdown
-      result,
-      time
-    );
+    // Animate the result (either newly calculated or cached)
+    if (result) {
+      console.log(`Animating ${selectedAlgo}...`);
+      this.visualizer.animate(result, speed); // Pass the current speed
+      this.updateStatsPanel(
+        `<strong>${this.algoSelector.options[this.algoSelector.selectedIndex].text}</strong>`,
+        result,
+        time
+      );
+    } else {
+      console.error(`Result for ${selectedAlgo} could not be retrieved or calculated.`);
+      this.updateStatsPanel(`Error: No result for ${selectedAlgo}.`);
+    }
   }
 
-  // Updates the HTML content of the statistics panel
+  // Updates the stats panel
   private updateStatsPanel(
     title: string,
     result?: AlgorithmResult,
     time?: number
   ) {
-    // Display initial message if no results are available
     if (!result || time === undefined) {
       this.statsPanel.innerHTML = `<p>${title}</p>`;
       return;
     }
-
-    // Calculate path distance in kilometers
-    const distance =
-      result.path.length > 0
-        ? this.calculatePathDistance(result.path) / 1000 // Convert meters to km
-        : 0;
-
-    // Calculate the number of segments in the path
+    const distance = result.path.length > 0 ? this.calculatePathDistance(result.path) / 1000 : 0;
     const pathSegments = result.path.length > 0 ? result.path.length - 1 : 0;
-
-    // Update the panel with formatted statistics
     this.statsPanel.innerHTML = `
       <h4>${title}</h4>
       <p>Time: <strong>${time.toFixed(2)} ms</strong></p>
@@ -232,26 +235,67 @@ class App {
     `;
   }
 
-  // Calculates the total distance (sum of edge weights) for a given path
+  // Updates the leaderboard panel
+  private updateLeaderboardPanel(clear: boolean = false) {
+    if (clear || this.lastResults.size === 0) {
+      this.leaderboardContent.innerHTML = 'Set start and end points to see results.';
+      return;
+    }
+
+    let tableHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Algo</th><th>Time (ms)</th><th>Nodes</th><th>Dist (km)</th><th>Segs</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    // Generate table rows based on cached results
+    for (const algoKey of this.algoOrder) {
+        const result = this.lastResults.get(algoKey);
+        const time = this.lastTimes.get(algoKey);
+
+        tableHTML += `<tr><td>${this.algoNames[algoKey] || algoKey}</td>`;
+        // Check if results for this algorithm exist in the cache
+        if (result && time !== undefined) {
+            const distance = result.path.length > 0 ? this.calculatePathDistance(result.path) / 1000 : 0;
+            const segments = result.path.length > 0 ? result.path.length - 1 : 0;
+            tableHTML += `
+              <td>${time.toFixed(2)}</td>
+              <td>${result.visitedInOrder.length.toLocaleString()}</td>
+              <td>${distance.toFixed(2)}</td>
+              <td>${segments.toLocaleString()}</td>
+            `;
+        } else {
+             // Display placeholders if results are not yet calculated
+             tableHTML += `<td colspan="4" style="text-align:center;">-</td>`;
+        }
+        tableHTML += `</tr>`;
+    }
+
+    tableHTML += `</tbody></table>`;
+    this.leaderboardContent.innerHTML = tableHTML;
+  }
+
+  // Calculates path distance
   private calculatePathDistance(path: number[]): number {
     let totalDistance = 0;
-    // Sum weights of edges between consecutive nodes in the path
     for (let i = 0; i < path.length - 1; i++) {
       const nodeAId = path[i];
       const nodeBId = path[i + 1];
       const nodeA_data = this.graph.getNode(nodeAId)!;
       const nodeB_data = this.graph.getNode(nodeBId)!;
-      // Use the graph's helper method to get edge weight (or approximation)
       totalDistance += this.graph.getEdgeWeight(nodeA_data, nodeB_data);
     }
     return totalDistance;
   }
 
-  // Displays the loading overlay
+  // Shows loading message
   private showLoadingMessage(message: string): HTMLElement {
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'loading-screen';
-    // Basic CSS for the loading overlay
     loadingDiv.style.cssText = `
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.7); color: white; display: flex;
@@ -263,15 +307,14 @@ class App {
     return loadingDiv;
   }
 
-  // Removes the loading overlay
+  // Hides loading message
   private hideLoadingMessage(element: HTMLElement) {
-    // Check if the element exists and has a parent before attempting removal
     if (element && element.parentNode) {
       element.parentNode.removeChild(element);
     }
   }
 }
 
-// Create an instance of the App class and start the application
+// Instantiate and start the application
 const app = new App();
 app.start();
