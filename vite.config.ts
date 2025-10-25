@@ -7,6 +7,6 @@ export default defineConfig({
   // the base should be '/PathFinder/'
   base: '/PathFinder/', // <-- IMPORTANT: Replace with your repo name!
   build: {
-    outDir: 'dist', // Ensure output is to the dist folder
+    outDir: 'docs', // Ensure output is to the dist folder
   },
 });
