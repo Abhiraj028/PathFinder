@@ -61,11 +61,18 @@ class App {
   // Initializes the application
   public async start() {
     console.log('Fetching map data...');
+    // Use the dynamic BASE_URL provided by Vite/GitHub Pages
+    const BASE_PATH = import.meta.env.BASE_URL;
+    const DATA_URL = `${BASE_PATH}kolkata_graph.json`;
+    
     const loadingMessage = this.showLoadingMessage('Loading Kolkata graph...');
 
     try {
-      const response = await fetch('/kolkata_graph.json');
-      if (!response.ok) throw new Error(`Fetch failed: ${response.statusText}`);
+      // Fetch graph data from the dynamically constructed URL
+      const response = await fetch(DATA_URL);
+      if (!response.ok) {
+        throw new Error(`Fetch failed: ${response.statusText}. Check console for requested URL.`);
+      }
       const data: GraphJSON = await response.json();
 
       loadingMessage.textContent = 'Building graph...';
@@ -79,8 +86,7 @@ class App {
       this.algoSelector.addEventListener('change', () => this.runVisualization(false)); // Don't recalculate on change
       this.resetButton.addEventListener('click', this.handleReset.bind(this));
 
-      // --- CORRECTED SPEED LISTENERS ---
-      // These should call runVisualization to restart the animation with the new speed.
+      // Speed control listeners: update speed and restart visualization
       this.speedSlow.addEventListener('click', () => {
         this.currentSpeed = 50; // Slow speed
         this.runVisualization(false); // Restart animation with new speed
@@ -93,15 +99,13 @@ class App {
         this.currentSpeed = 0; // Fast speed
         this.runVisualization(false); // Restart animation with new speed
       });
-      // ------------------------------------
 
     } catch (err) {
       console.error('Initialization error:', err);
-      loadingMessage.textContent = 'Error loading data. Refresh needed.';
+      loadingMessage.textContent = 'Error loading data. Refresh needed. Check console for 404.';
     }
   }
 
-  // --- Rest of the file (handleReset, handleMapClick, runVisualization, etc.) is unchanged ---
   // Resets the application state
   private handleReset() {
     console.log('Resetting state.');
@@ -189,7 +193,7 @@ class App {
       }
 
       time = performance.now() - startTime;
-      result = calculatedResult!; // Assume calculation was successful
+      result = calculatedResult!; 
 
       // Cache the new result
       this.lastResults.set(selectedAlgo, result);
