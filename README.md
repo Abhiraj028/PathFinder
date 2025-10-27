@@ -1,3 +1,14 @@
+[REAL-WORLD PATHFINDING ALGORITHM VISUALIZER FOR USING OPENSTREETMAP DATA.pdf](https://github.com/user-attachments/files/23167704/REAL-WORLD.PATHFINDING.ALGORITHM.VISUALIZER.FOR.USING.OPENSTREETMAP.DATA.1.pdf)
+
+
+[Real-World-Pathfinding-Algorithm-Visualizerchanged.pptx](https://github.com/user-attachments/files/23167771/Real-World-Pathfinding-Algorithm-Visualizerchanged.pptx)
+
+
+## Deployed Application
+https://abhiraj028.github.io/PathFinder/
+
+
+
 # Pathfinding Algorithm Visualizer (Kolkata)
 
 This project visualizes various pathfinding algorithms (Dijkstra, A*, BFS, GBFS, DFS) on a real-world street map of Kolkata and Howrah, India, using data from OpenStreetMap. It allows users to select start and end points on the map and see the algorithm's exploration process unfold in real-time.
@@ -55,5 +66,4 @@ Once the setup is complete, you can start:
 npm run dev
 ```
 
-## Deployed Application
-https://abhiraj028.github.io/PathFinder/
+
