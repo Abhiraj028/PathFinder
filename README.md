@@ -53,6 +53,7 @@ Once the setup is complete, you can start:
 
 ```bash
 npm run dev
+```
 
 ## Deploted Application
 https://abhiraj028.github.io/PathFinder/
