@@ -7,7 +7,7 @@
 [Real-World-Pathfinding-Algorithm-Visualizerchanged.pptx](https://github.com/user-attachments/files/23167771/Real-World-Pathfinding-Algorithm-Visualizerchanged.pptx)
 
 
-## Deployed Application
+# Live Demo
 https://abhiraj028.github.io/PathFinder/
 
 
