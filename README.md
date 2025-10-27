@@ -55,5 +55,5 @@ Once the setup is complete, you can start:
 npm run dev
 ```
 
-## Deploted Application
+## Deployed Application
 https://abhiraj028.github.io/PathFinder/
